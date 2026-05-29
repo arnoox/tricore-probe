@@ -40,6 +40,7 @@ Please report any bugs or issues you encounter with the Linux setup only to this
 3. `objcopy` CLI utility
 4. Rust toolchain
 5. `libudev` library (`libudev-dev` on Ubuntu, `systemd-libs` on Fedora)
+6. `sudo apt install pkg-config`
 
 ### Installation
 Clone the repository and place the DAS tool installer and AurixFlasher installer into the [tricore-docker](tricore-docker) directory.
@@ -84,11 +85,11 @@ For more sample code refer to the Bluewind [bare-metal examples](https://github.
 
 For applications not running on all the available cores, you can specify the number of active cores in the application with a CLI flag in order to prevent abrupt exit from the `rtt` session (by default, all of the cores available to the MCU are used):
 ```
-> tricore-probe --cores <n> app.elf 
+> tricore-probe --cores <n> app.elf
 ```
 Note that this parameter only works for applications running on contiguous cores. For example, on a tri-core processor, with an application only starting `core0` and `core2`, this session will stop anyway:
 ```
-> tricore-probe --cores 2 app.elf 
+> tricore-probe --cores 2 app.elf
 ```
 
 ## Cargo runner

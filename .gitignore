@@ -1,8 +1,8 @@
 tricore-docker/docker-build-exe
 tricore-docker/artifacts
 target
-Cargo.lock
 .idea
 tricore-docker/DAS_*_SETUP.exe
 tricore-docker/AURIXFlasherSoftwareTool-setup_*.exe
 tricore-docker/aurixflashersoftwaretool_1.0.10_Windows_x64.msi
+tricore-docker/wineftd2xx/libftd2xx-*.tgz

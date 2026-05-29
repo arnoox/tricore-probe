@@ -90,3 +90,6 @@ FT_GetDivisor                 xFT_GetDivisor
 FT_GetDivisorHi               xFT_GetDivisorHi
 FT_VendorRequest              xFT_VendorRequest
 FT_SetDeadmanTimeout          xFT_SetDeadmanTimeout
+__isoc23_strtol               strtol
+__isoc23_strtoul              strtoul
+__isoc23_sscanf               sscanf

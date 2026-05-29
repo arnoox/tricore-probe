@@ -145,7 +145,10 @@ fn main() -> anyhow::Result<()> {
             None => None,
         };
 
-        let mut daemon_command = "RUST_LOG=trace xvfb-run wine64 tricore-probe.exe".to_owned();
+        // Early version called wine64, but it seems that newer apt versions of wine only install wine,
+        // which is a wrapper that calls the correct binary based on the architecture of the called
+        // executable. So we can just call wine here and it should work in both cases.
+        let mut daemon_command = "RUST_LOG=trace xvfb-run wine tricore-probe.exe".to_owned();
         for arg in tricore_args {
             daemon_command.push(' ');
             daemon_command.push_str(&arg);

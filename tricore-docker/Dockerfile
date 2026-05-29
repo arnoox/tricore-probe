@@ -2,7 +2,7 @@
 
 # Use the official rust image with xwin (https://github.com/Jake-Shadle/xwin) as base.
 #
-FROM docker.io/library/rust:1.85.0-slim-bookworm AS builder-base
+FROM docker.io/library/rust:1.88.0-slim-bookworm AS builder-base
 
 ENV KEYRINGS /usr/local/share/keyrings
 
@@ -159,8 +159,12 @@ RUN wget -O ./wine-mono-9.1.0-x86.msi https://dl.winehq.org/wine/wine-mono/9.1.0
 RUN msiexec /i wine-mono-9.1.0-x86.msi
 
 # Build FTD2XX DLL shim.
+# NOTE: libftd2xx-linux-x86_64-1.4.34.tgz must be manually downloaded from FTDI's website
+# (https://ftdichip.com/drivers/d2xx-drivers/) and placed in tricore-docker/wineftd2xx/
+# before building. FTDI's server blocks automated downloads via wget/curl.
 COPY ["tricore-docker/wineftd2xx", "./wineftd2xx"]
 WORKDIR "./wineftd2xx"
+RUN test -f libftd2xx-linux-x86_64-1.4.34.tgz || (echo "ERROR: libftd2xx-linux-x86_64-1.4.34.tgz is missing. Download it from https://ftdichip.com/drivers/d2xx-drivers/ and place it in tricore-docker/wineftd2xx/" && exit 1)
 RUN make
 RUN make install
 
