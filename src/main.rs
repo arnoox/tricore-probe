@@ -233,18 +233,20 @@ fn main() -> anyhow::Result<()> {
                     .context("Cannot flash elf file")?;
             }
 
-            let mut defmt_decoder = DefmtDecoder::spawn(elf.as_path())?;
+            if let Some(mut defmt_decoder) = DefmtDecoder::try_spawn(elf.as_path())? {
+                let backtrace = command_server.read_rtt(
+                    defmt_decoder.rtt_control_block_address(),
+                    &mut defmt_decoder,
+                    args.cores,
+                )?;
 
-            let backtrace = command_server.read_rtt(
-                defmt_decoder.rtt_control_block_address(),
-                &mut defmt_decoder,
-                args.cores,
-            )?;
+                let backtrace_info = backtrace.addr2line(elf.as_path())?;
 
-            let backtrace_info = backtrace.addr2line(elf.as_path())?;
-
-            println!("{}", "Device halted, backtrace as follows".red());
-            backtrace_info.log_stdout();
+                println!("{}", "Device halted, backtrace as follows".red());
+                backtrace_info.log_stdout();
+            } else {
+                log::info!("No _SEGGER_RTT symbol found; skipping RTT output");
+            }
         } else {
             log::warn!("Nothing to do here without elf")
         }

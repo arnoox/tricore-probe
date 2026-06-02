@@ -34,30 +34,31 @@ impl DefmtDecoder {
     ///
     /// This function will fail if the user did not install the program, e.g. via
     /// `cargo install defmt-print`.
-    pub fn spawn(elf_file: &Path) -> anyhow::Result<DefmtDecoder> {
+    /// Like [`spawn`](Self::spawn) but returns `None` when the ELF has no
+    /// `_SEGGER_RTT` symbol (i.e. does not use defmt/RTT).
+    pub fn try_spawn(elf_file: &Path) -> anyhow::Result<Option<DefmtDecoder>> {
         let elf_data = fs::read(elf_file).context("Cannot read elf file")?;
         let elf =
             ElfBytes::<'_, AnyEndian>::minimal_parse(&elf_data).context("Cannot parse elf file")?;
 
-        let (symbols, strings) = elf
+        let Some((symbols, strings)) = elf
             .symbol_table()
             .with_context(|| "Could not parse symbol table from elf file")?
-            .with_context(|| "Elf file does not have symbol table")?;
+        else {
+            return Ok(None);
+        };
 
-        let rtt_symbol_address = symbols
-            .iter()
-            .find_map(|symbol| {
-                let Ok(symbol_name) = strings.get(symbol.st_name as usize) else {
-                    return None;
-                };
-
-                if symbol_name != "_SEGGER_RTT" {
-                    return None;
-                }
-
-                Some(symbol.st_value)
-            })
-            .ok_or_else(|| anyhow::Error::msg("Elf file does not have _SEGGER_RTT symbol"))?;
+        let Some(rtt_symbol_address) = symbols.iter().find_map(|symbol| {
+            let Ok(symbol_name) = strings.get(symbol.st_name as usize) else {
+                return None;
+            };
+            if symbol_name != "_SEGGER_RTT" {
+                return None;
+            }
+            Some(symbol.st_value)
+        }) else {
+            return Ok(None);
+        };
 
         let mut defmt_print_process = Command::new("defmt-print");
         let spawned_decoder = defmt_print_process
@@ -72,10 +73,10 @@ impl DefmtDecoder {
             .spawn()
             .with_context(|| "Cannot spawn 'defmt-print' to decode log frames. Did you run 'cargo install defmt-print'?")?;
 
-        Ok(DefmtDecoder {
+        Ok(Some(DefmtDecoder {
             spawned_decoder,
             rtt_symbol_address,
-        })
+        }))
     }
 
     /// Returns the address of the RTT control block used by the underlying binary.
