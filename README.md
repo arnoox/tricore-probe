@@ -37,10 +37,11 @@ Please report any bugs or issues you encounter with the Linux setup only to this
 
 1. Place the [Infineon DAS tool version 8.1.4](https://www.infineon.com/cms/en/product/promopages/das/) installer (`DAS_V8_1_4_SETUP.exe`) in [tricore-docker](tricore-docker).
 2. Place the [Infineon AURIX™ Flasher Software Tool 3.0.0](https://softwaretools.infineon.com/tools/com.ifx.tb.tool.aurixflashersoftwaretool) installer (`AURIXFlasherSoftwareTool-setup_3.0.0_20241030-1737.exe`) in [tricore-docker](tricore-docker).
-3. `objcopy` CLI utility
+3. `objcopy` CLI utility with TriCore target support
 4. Rust toolchain
 5. `libudev` library (`libudev-dev` on Ubuntu, `systemd-libs` on Fedora)
-6. `sudo apt install pkg-config`
+6. `pkg-config` build tool (`sudo apt install pkg-config` on Ubuntu)
+7. Place the `libftd2xx-linux-x86_64-*.tgz` archive in [tricore-docker/wineftd2xx](tricore-docker/wineftd2xx).
 
 ### Installation
 Clone the repository and place the DAS tool installer and AurixFlasher installer into the [tricore-docker](tricore-docker) directory.
