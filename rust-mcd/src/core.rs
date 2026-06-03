@@ -188,6 +188,16 @@ impl<'a> Core<'a> {
         }
     }
 
+    /// Halts the core if it is currently running.
+    pub fn stop(&self) -> anyhow::Result<()> {
+        let result = unsafe { MCD_LIB.mcd_stop_f(self.core.as_ptr(), 0) };
+        if result != 0 {
+            Err(expect_error(Some(self))).with_context(|| "Internal library reported an error")
+        } else {
+            Ok(())
+        }
+    }
+
     pub fn step(&self) -> anyhow::Result<()> {
         let step_type = MCD_CORE_STEP_TYPE_INSTR as u32;
 
@@ -227,6 +237,19 @@ impl<'a> Core<'a> {
             core: self,
             trigger_id,
         })
+    }
+
+    /// Removes a previously created trigger by its id.
+    ///
+    /// This is the borrow-free counterpart to [Trigger::remove] and is useful
+    /// when the [Trigger] handle cannot be kept around (e.g. because it would
+    /// create a self-referential structure together with the [Core]).
+    pub fn remove_breakpoint(&self, trigger_id: u32) -> anyhow::Result<()> {
+        let result = unsafe { MCD_LIB.mcd_remove_trig_f(self.core.as_ptr(), trigger_id) };
+        if result != 0 {
+            return Err(expect_error(Some(self))).with_context(|| "Cannot remove trigger");
+        }
+        Ok(())
     }
 
     pub fn download_triggers(&self) {
@@ -297,6 +320,14 @@ pub struct Trigger<'a> {
 }
 
 impl Trigger<'_> {
+    /// Returns the id of this trigger as assigned by the debug controller.
+    ///
+    /// The id can be passed to [Core::remove_breakpoint] to remove the trigger
+    /// without keeping this borrowed handle around.
+    pub fn id(&self) -> u32 {
+        self.trigger_id
+    }
+
     pub fn get_state(&self) -> anyhow::Result<TriggerState> {
         let mut state_output = mcd_trig_state_st::default();
         let result = unsafe {

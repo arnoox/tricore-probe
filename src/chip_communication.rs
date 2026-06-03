@@ -155,7 +155,7 @@ impl ChipCommunication {
         anyhow::Ok(self.scan_result.as_ref().unwrap())
     }
 
-    fn get_system(&mut self) -> anyhow::Result<System> {
+    pub(crate) fn get_system(&mut self) -> anyhow::Result<System> {
         self.get_selected_device()?.info.connect()
     }
 }

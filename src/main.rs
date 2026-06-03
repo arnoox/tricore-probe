@@ -15,6 +15,7 @@ pub mod das;
 pub mod defmt;
 pub mod elf;
 pub mod flash;
+pub mod gdb;
 
 /// Simple program to flash and interface with tricore chips.
 #[derive(Parser, Debug)]
@@ -41,6 +42,13 @@ struct Args {
     /// Number of active cores in application
     #[arg(short, long)]
     cores: Option<u8>,
+
+    /// Start a GDB server on the given TCP port instead of flashing / RTT.
+    ///
+    /// Attaches to core 0 of the running target. When passed without a value,
+    /// port 1234 is used.
+    #[arg(long, value_name = "PORT", num_args = 0..=1, default_missing_value = "1234")]
+    gdb: Option<u16>,
 
     /// Configures the log level.
     #[arg(short, long, value_enum, required = false, default_value_t = LogLevel::Warn)]
@@ -94,6 +102,14 @@ fn main() -> anyhow::Result<()> {
         if let Some(cores) = args.cores {
             tricore_args.push("--cores".to_owned());
             tricore_args.push(cores.to_string());
+        }
+
+        if let Some(port) = args.gdb {
+            // Publish the GDB server port so a host-side GDB can reach the
+            // server running inside the container.
+            command.arg("-p").arg(format!("{port}:{port}"));
+            tricore_args.push("--gdb".to_owned());
+            tricore_args.push(port.to_string());
         }
 
         match args.log_level {
@@ -221,6 +237,14 @@ fn main() -> anyhow::Result<()> {
             }
         } else {
             command_server.connect(None)?;
+        }
+
+        if let Some(port) = args.gdb {
+            // GDB mode attaches to the running target; it does not flash and does
+            // not stream RTT, so it takes over here and ignores any --elf.
+            let system = command_server.get_system()?;
+            crate::gdb::serve_gdb(system, port)?;
+            return Ok(());
         }
 
         if let Some(elf) = args.elf {

@@ -93,6 +93,39 @@ Note that this parameter only works for applications running on contiguous cores
 > tricore-probe --cores 2 app.elf
 ```
 
+## GDB server
+
+`tricore-probe` can act as a GDB server for interactive debugging instead of
+flashing and streaming RTT. This attaches to **core 0** of the running target and
+speaks the GDB Remote Serial Protocol, so you can inspect and modify registers and
+memory, set hardware breakpoints, and single step.
+
+Flash your application as usual first, then start the server:
+
+```
+> tricore-probe --gdb
+GDB server listening on port 1234, waiting for a connection...
+```
+
+Pass a value to choose a different port, e.g. `tricore-probe --gdb 3333`.
+
+This mode does not flash and does not stream RTT output; it just attaches to
+whatever is currently running on the target.
+
+Connect with a TriCore GDB (e.g. the HighTec `tricore-gdb`), loading the symbols
+on the GDB side:
+
+```
+> tricore-gdb app.elf -ex "target remote :1234"
+(gdb) break main
+(gdb) continue
+(gdb) info registers
+(gdb) stepi
+```
+
+On Linux the server runs inside the Docker container and the port is published to
+the host automatically, so you still connect to `localhost:<port>`.
+
 ## Cargo runner
 This program can be configured as a [runner](https://doc.rust-lang.org/cargo/reference/config.html#targettriplerunner).
 Check [`main.rs`](src/main.rs) or run `tricore-probe --help` for additional configuration options.

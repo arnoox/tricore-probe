@@ -167,6 +167,16 @@ impl Register<'_> {
             .with_context(|| "could not transform data to register value")
     }
 
+    /// Writes the given value to the register in the target.
+    ///
+    /// Registers are memory mapped, so this is the inverse of [Self::read] and
+    /// simply writes the four little-endian bytes to the register address.
+    pub fn write(&self, value: u32) -> anyhow::Result<()> {
+        self.core
+            .write(self.register.addr.address, value.to_le_bytes().to_vec())
+            .with_context(|| "Cannot write register value")
+    }
+
     /// Returns the name of the register as reported from the debug
     /// controller.
     pub fn name(&self) -> String {

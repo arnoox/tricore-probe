@@ -22,6 +22,7 @@ elf = "0.7.1"
 
 rust-mcd = { path = "rust-mcd" }
 ihex = "3.0.0"
+gdbstub = "0.7.10"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 udev = {version = "0.8.0"}
